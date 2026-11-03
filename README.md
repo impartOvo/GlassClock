@@ -1,5 +1,7 @@
 # 玻璃下班时钟
 
+<img src="assets/GlassClock.png" alt="GlassClock 极光玻璃图标" width="160">
+
 Windows 系统托盘桌面小组件。可从 [Releases](https://github.com/impartOvo/GlassClock/releases) 下载 **GlassClock.exe** 直接运行，也可按下文从源码启动。运行后时钟显示在桌面，程序图标留在右下角系统托盘，不占用任务栏按钮。
 
 ## 使用

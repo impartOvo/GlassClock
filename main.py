@@ -14,7 +14,7 @@ import time
 from PySide6.QtCore import QPoint, QPointF, QRectF, Qt, QTimer
 from PySide6.QtGui import (
     QAction, QColor, QFont, QIcon, QImage, QLinearGradient, QPainter, QPainterPath,
-    QPen, QPixmap, QRadialGradient,
+    QPen, QRadialGradient,
 )
 from PySide6.QtWidgets import QApplication, QAbstractButton, QMenu, QSystemTrayIcon, QWidget
 
@@ -22,6 +22,7 @@ from countdown import beijing_now, daily_countdowns, format_remaining
 from skins import SKINS
 
 ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+ASSETS_ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
 SETTINGS = ROOT / "data" / "settings.json"
 WIDTH, HEIGHT = 168, 192
 
@@ -439,21 +440,7 @@ class GlassClock(QWidget):
 
 
 def tray_icon():
-    """Draw a small glass clock icon that stays legible in the notification area."""
-    image = QPixmap(64, 64)
-    image.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(image)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    painter.setPen(QPen(QColor("#e3d4ff"), 2.5))
-    painter.setBrush(QColor("#36415c"))
-    painter.drawRoundedRect(QRectF(5, 5, 54, 54), 15, 15)
-    painter.setPen(QPen(QColor("#ffffff"), 2.6))
-    painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.drawEllipse(QRectF(16, 16, 32, 32))
-    painter.drawLine(QPointF(32, 32), QPointF(32, 22))
-    painter.drawLine(QPointF(32, 32), QPointF(39, 35))
-    painter.end()
-    return QIcon(image)
+    return QIcon(str(ASSETS_ROOT / "assets" / "GlassClock.png"))
 
 
 def main():
