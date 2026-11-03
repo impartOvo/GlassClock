@@ -13,10 +13,10 @@ import time
 
 from PySide6.QtCore import QPoint, QPointF, QRectF, Qt, QTimer
 from PySide6.QtGui import (
-    QAction, QColor, QFont, QImage, QLinearGradient, QPainter, QPainterPath,
-    QPen, QRadialGradient,
+    QAction, QColor, QFont, QIcon, QImage, QLinearGradient, QPainter, QPainterPath,
+    QPen, QPixmap, QRadialGradient,
 )
-from PySide6.QtWidgets import QApplication, QAbstractButton, QMenu, QWidget
+from PySide6.QtWidgets import QApplication, QAbstractButton, QMenu, QSystemTrayIcon, QWidget
 
 from countdown import beijing_now, daily_countdowns, format_remaining
 from skins import SKINS
@@ -127,7 +127,8 @@ class GlassClock(QWidget):
         self.pinned = bool(self.settings.get("pinned", True))
         self.rain_enabled = bool(self.settings.get("rain", True))
         self.animating = bool(self.settings.get("animating", True))
-        flags = Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint
+        # Tool windows remain on the desktop without taking a taskbar button.
+        flags = Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint
         if self.pinned:
             flags |= Qt.WindowType.WindowStaysOnTopHint
         super().__init__(None, flags)
@@ -218,9 +219,11 @@ class GlassClock(QWidget):
     def toggle_pin(self):
         self.pinned = not self.pinned
         position = self.pos()
+        was_visible = self.isVisible()
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, self.pinned)
         self.move(position)
-        self.show()
+        if was_visible:
+            self.show()
         self.update_tooltips()
         self.pin_button.update()
         self.save()
@@ -235,6 +238,13 @@ class GlassClock(QWidget):
                 if drop["y"] > HEIGHT + 10:
                     self.rain[index] = self.new_drop()
         self.update()
+
+    def closeEvent(self, event):
+        if QSystemTrayIcon.isSystemTrayAvailable():
+            self.hide()
+            event.ignore()
+        else:
+            super().closeEvent(event)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -293,6 +303,8 @@ class GlassClock(QWidget):
         pin.setChecked(self.pinned)
         pin.triggered.connect(self.toggle_pin)
         menu.addSeparator()
+        if QSystemTrayIcon.isSystemTrayAvailable():
+            menu.addAction("隐藏到系统托盘", self.hide)
         menu.addAction("退出时钟", QApplication.quit)
         menu.exec(event.globalPos())
 
@@ -426,11 +438,60 @@ class GlassClock(QWidget):
         return font
 
 
+def tray_icon():
+    """Draw a small glass clock icon that stays legible in the notification area."""
+    image = QPixmap(64, 64)
+    image.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(image)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(QPen(QColor("#e3d4ff"), 2.5))
+    painter.setBrush(QColor("#36415c"))
+    painter.drawRoundedRect(QRectF(5, 5, 54, 54), 15, 15)
+    painter.setPen(QPen(QColor("#ffffff"), 2.6))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawEllipse(QRectF(16, 16, 32, 32))
+    painter.drawLine(QPointF(32, 32), QPointF(32, 22))
+    painter.drawLine(QPointF(32, 32), QPointF(39, 35))
+    painter.end()
+    return QIcon(image)
+
+
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("玻璃下班时钟")
-    app.setQuitOnLastWindowClosed(True)
+    app.setWindowIcon(tray_icon())
     clock = GlassClock()
+    if QSystemTrayIcon.isSystemTrayAvailable():
+        app.setQuitOnLastWindowClosed(False)
+        tray = QSystemTrayIcon(app.windowIcon(), app)
+        tray.setToolTip("GlassClock · 玻璃下班时钟")
+        tray_menu = QMenu()
+        show_action = tray_menu.addAction("显示时钟")
+        show_action.triggered.connect(lambda: (clock.show(), clock.raise_(), clock.activateWindow()))
+        hide_action = tray_menu.addAction("隐藏时钟")
+        hide_action.triggered.connect(clock.hide)
+        tray_menu.addSeparator()
+        pin_action = tray_menu.addAction("窗口置顶")
+        pin_action.setCheckable(True)
+        pin_action.setChecked(clock.pinned)
+        pin_action.triggered.connect(clock.toggle_pin)
+        tray_menu.aboutToShow.connect(lambda: pin_action.setChecked(clock.pinned))
+        skins_menu = tray_menu.addMenu("选择皮肤")
+        for index, skin in enumerate(SKINS):
+            action = skins_menu.addAction(skin.name)
+            action.triggered.connect(lambda checked=False, i=index: clock.choose_skin(i))
+        tray_menu.addSeparator()
+        tray_menu.addAction("退出时钟", app.quit)
+        tray.setContextMenu(tray_menu)
+        tray.activated.connect(
+            lambda reason: (clock.show(), clock.raise_(), clock.activateWindow())
+            if reason == QSystemTrayIcon.ActivationReason.DoubleClick else None
+        )
+        tray.show()
+    else:
+        app.setQuitOnLastWindowClosed(True)
+        clock.setWindowFlag(Qt.WindowType.Tool, False)
+        clock.setWindowFlag(Qt.WindowType.Window, True)
     clock.show()
     return app.exec()
 

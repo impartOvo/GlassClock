@@ -1,6 +1,6 @@
 # 玻璃下班时钟
 
-Windows 桌面小组件。可从 [Releases](https://github.com/impartOvo/GlassClock/releases) 下载 **GlassClock.exe** 直接运行，也可按下文从源码启动。
+Windows 系统托盘桌面小组件。可从 [Releases](https://github.com/impartOvo/GlassClock/releases) 下载 **GlassClock.exe** 直接运行，也可按下文从源码启动。运行后时钟显示在桌面，程序图标留在右下角系统托盘，不占用任务栏按钮。
 
 ## 使用
 
@@ -8,6 +8,8 @@ Windows 桌面小组件。可从 [Releases](https://github.com/impartOvo/GlassCl
 - 右上角图钉：开启或取消窗口置顶。
 - 按住空白处拖动：移动时钟位置。
 - 在时钟上右键：直接选择皮肤，开启或关闭雨滴，暂停或恢复动态背景，或者退出。
+- 在托盘图标上右键：显示或隐藏时钟、切换皮肤、设置窗口置顶、退出程序；双击托盘图标可重新显示时钟。
+- 隐藏或关闭时钟窗口后，程序继续留在系统托盘；需要完全退出时选择“退出时钟”。
 
 雨滴默认开启，可和任意一款皮肤搭配。所有皮肤都有缓慢流动的背景光影；雨滴会在玻璃表面向下滑动。程序会记住位置、皮肤、置顶和动画设置。
 
